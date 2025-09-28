@@ -6,20 +6,20 @@ Traditional presentation narration faces several challenges. First, manual narra
 
 ---
 
-Marptalk solves these problems with an elegant three-stage pipeline. First, we extract speaker notes directly from your Marp markdown files using the built-in notes feature. Second, we send these notes to Google Cloud's text-to-speech API to generate high-quality audio narration. Finally, we combine everything into a self-playing HTML presentation that automatically advances slides in sync with the audio.
+Marptalk solves these problems with an elegant multi-stage pipeline. First, we extract speaker notes directly from your Marp markdown files using the built-in notes feature. Second, we send these notes to Google Cloud's text-to-speech API to generate high-quality audio narration. Third, we combine everything into a self-playing HTML presentation that automatically advances slides in sync with the audio. Finally, we can generate complete MP4 videos with embedded subtitles and YouTube chapter markers.
 
 ---
 
-The key features that make Marptalk special include AI-powered narration using Google Cloud's incredibly natural-sounding voices, automatic slide advancement that keeps perfect sync with the audio, fast regeneration when you update your content, interactive controls so you can pause, resume, or navigate manually, and compatibility with any modern web browser without requiring special software.
+The key features that make Marptalk special include AI-powered narration using Google Cloud's incredibly natural-sounding voices, automatic slide advancement that keeps perfect sync with the audio, complete video generation that creates MP4 files with synchronized audio and embedded subtitles, SRT subtitle generation for accessibility and video publishing, YouTube chapter markers for easy navigation, fast regeneration when you update your content, and interactive controls so you can pause, resume, or navigate manually during live presentations.
 
 ---
 
-From a technical perspective, Marptalk is built with modern, reliable tools. We use Node.js to create a robust automation pipeline that handles file operations and API calls. The Marp CLI handles the heavy lifting of converting markdown to beautiful HTML slides. Google Cloud's API provides the text-to-speech capabilities with multiple voice options. And we use vanilla JavaScript for the presentation controls to keep things lightweight and compatible.
+From a technical perspective, Marptalk is built with modern, reliable tools. We use Node.js to create a robust automation pipeline that handles file operations and API calls. The Marp CLI handles the heavy lifting of converting markdown to beautiful HTML slides. Google Cloud's text-to-speech API provides incredibly natural voices with multiple language options. Puppeteer captures high-quality screenshots of each slide for video generation. FFmpeg handles the complex video processing, combining static slides with perfectly synchronized audio tracks. And we use vanilla JavaScript for the presentation controls to keep things lightweight and compatible.
 
 ---
 
-Getting started with Marptalk is simple. First, install the dependencies using npm install. Then authenticate with Google Cloud using gcloud auth application-default login. Run the generate script pointing to your markdown file, and finally open the resulting HTML file in your browser. The entire process typically takes less than a minute for a typical presentation.
+Getting started with Marptalk is simple. First, install the dependencies using npm install. Then authenticate with Google Cloud using gcloud auth application-default login. Run the generate script pointing to your markdown file, and finally open the resulting HTML file in your browser. For video generation, add the video and subtitle flags to create a complete MP4 file with embedded subtitles and YouTube chapter markers. The entire process typically takes less than a minute for a typical presentation.
 
 ---
 
-That concludes our demonstration of Marptalk! We've shown you how to create automated narrated presentations that combine the power of Marp's markdown-to-slides conversion with Google Cloud's natural text-to-speech capabilities. I encourage you to try it yourself - modify this presentation, add your own speaker notes, experiment with different voices, and start building your own automated presentations. Thank you for your attention, and happy presenting!
+That concludes our demonstration of Marptalk! We've shown you how to create automated narrated presentations that combine the power of Marp's markdown-to-slides conversion with Google Cloud's natural text-to-speech capabilities, complete with MP4 video generation, embedded subtitles, and YouTube chapter markers. I encourage you to try it yourself - modify this presentation, add your own speaker notes, experiment with different voices, generate your own videos, and start building automated presentations for any topic. The generated videos are ready for direct upload to YouTube, Vimeo, or any video platform. Thank you for your attention, and happy presenting!

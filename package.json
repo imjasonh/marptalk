@@ -9,9 +9,9 @@
   "scripts": {
     "start": "node src/generate.js",
     "demo": "node src/generate.js examples/demo.md",
-    "dev": "node src/generate.js examples/demo.md --dev-mode",
-    "test-tts": "node test-gcp-tts.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "video": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters",
+    "video-dev": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters --dev-mode",
+    "dev": "node src/generate.js examples/demo.md --dev-mode"
   },
   "keywords": [],
   "author": "",
