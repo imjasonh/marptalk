@@ -6,6 +6,7 @@ const path = require('path');
 const { extractNotes } = require('./extract-notes');
 const { generateAudio } = require('./generate-audio');
 const { generateHtml } = require('./generate-html');
+const { generateSubtitles } = require('./generate-subtitles');
 
 const program = new Command();
 
@@ -20,6 +21,10 @@ program
   .option('--key-file <path>', 'Path to Google Cloud service account key file')
   .option('--max-slides <num>', 'Maximum number of slides to generate audio for (for testing)', parseInt)
   .option('--dev-mode', 'Development mode: skip TTS generation, only update HTML/JS')
+  .option('--generate-srt', 'Generate SRT subtitle file')
+  .option('--generate-chapters', 'Generate YouTube chapter markers file')
+  .option('--srt-filename <name>', 'Custom filename for SRT file', 'subtitles.srt')
+  .option('--chapters-filename <name>', 'Custom filename for chapters file', 'chapters.txt')
   .action(async (input, options) => {
     try {
       const inputFile = path.resolve(input);
@@ -73,6 +78,49 @@ program
         console.log();
       } else {
         console.log('🔧 Development mode: Skipping stages A & B (notes extraction and TTS)');
+        console.log();
+      }
+
+      // Stage D: Generate subtitles and chapters (if requested)
+      if (options.generateSrt || options.generateChapters) {
+        console.log('📝 Stage D: Generating subtitles and chapters...');
+        
+        // Ensure we have extracted notes (either from Stage A or development mode)
+        let slideCount;
+        if (options.devMode) {
+          // In dev mode, we need to extract notes for subtitle generation
+          await fs.ensureDir('.temp');
+          slideCount = await extractNotes(inputFile);
+        } else {
+          // Notes already extracted in Stage A
+          const tempFiles = await fs.readdir('.temp');
+          slideCount = tempFiles.filter(f => f.startsWith('slide-') && f.endsWith('.txt')).length;
+        }
+
+        if (options.generateSrt || options.generateChapters) {
+          const customOptions = {};
+          if (options.srtFilename && options.srtFilename !== 'subtitles.srt') {
+            customOptions.srtFilename = options.srtFilename;
+          }
+          if (options.chaptersFilename && options.chaptersFilename !== 'chapters.txt') {
+            customOptions.chaptersFilename = options.chaptersFilename;
+          }
+
+          const results = await generateSubtitles({
+            inputFile,
+            slideCount,
+            outputDir,
+            customOptions
+          });
+
+          if (options.generateSrt) {
+            console.log(`📝 SRT subtitles generated: ${results.srt}`);
+          }
+          if (options.generateChapters) {
+            console.log(`📝 YouTube chapters generated: ${results.chapters}`);
+          }
+        }
+        console.log('✅ Subtitles and chapters generation complete');
         console.log();
       }
 
