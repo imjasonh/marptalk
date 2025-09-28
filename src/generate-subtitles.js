@@ -11,15 +11,25 @@ function extractSlideTitles(markdownContent) {
   const titles = [];
   
   slides.forEach((slide, index) => {
-    const lines = slide.split('\n');
-    const titleLine = lines.find(line => line.startsWith('# '));
+    const lines = slide.split('\n').filter(line => line.trim());
+    
+    // Look for any heading (h1, h2, h3, etc.)
+    const titleLine = lines.find(line => line.match(/^#{1,6}\s+/));
     
     if (titleLine) {
-      // Remove the markdown heading syntax
-      titles.push(titleLine.replace(/^# /, '').trim());
+      // Remove the markdown heading syntax (# ## ### etc.)
+      const title = titleLine.replace(/^#{1,6}\s+/, '').trim();
+      titles.push(title);
     } else {
-      // Fallback for slides without titles
-      titles.push(`Slide ${index + 1}`);
+      // Look for bold text as potential title
+      const boldLine = lines.find(line => line.match(/^\*\*.*\*\*$/));
+      if (boldLine) {
+        const title = boldLine.replace(/\*\*/g, '').trim();
+        titles.push(title);
+      } else {
+        // Fallback for slides without titles
+        titles.push(`Slide ${index + 1}`);
+      }
     }
   });
   
