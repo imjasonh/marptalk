@@ -2,6 +2,8 @@
 
 Automated narrated Marp presentations with Google Cloud Text-to-Speech.
 
+[See it in action!](https://imjasonh.github.io/marptalk/dist/index.html)
+
 ## Features
 
 - 🎤 AI-powered narration with natural voices
