@@ -1,0 +1,8 @@
+0:00 - Slide 1
+0:13 - Welcome to Marptalk
+0:38 - The Problem
+1:01 - The Marptalk Solution
+1:23 - Key Features
+1:49 - Technical Implementation
+2:12 - Getting Started
+2:37 - Demo Complete!

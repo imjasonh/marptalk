@@ -57,6 +57,10 @@ node src/generate.js <input.md> [options]
 - `--language <code>`: Language code (default: `en-US`)
 - `--key-file <path>`: Path to Google Cloud service account key file
 - `--max-slides <num>`: Maximum slides for testing
+- `--generate-srt`: Generate SRT subtitle file for video captions
+- `--generate-chapters`: Generate YouTube chapter markers file
+- `--srt-filename <name>`: Custom filename for SRT file (default: `subtitles.srt`)
+- `--chapters-filename <name>`: Custom filename for chapters file (default: `chapters.txt`)
 
 ### Popular GCP Voices
 
@@ -117,6 +121,12 @@ node src/generate.js my-presentation.md --voice en-US-Journey-F --language en-US
 
 # Test with first 3 slides only
 node src/generate.js my-presentation.md --max-slides 3
+
+# Generate with SRT subtitles and YouTube chapters
+node src/generate.js my-presentation.md --generate-srt --generate-chapters
+
+# Custom subtitle and chapter filenames
+node src/generate.js my-presentation.md --generate-srt --generate-chapters --srt-filename "my-captions.srt" --chapters-filename "my-chapters.txt"
 ```
 
 ### 3. Present
@@ -142,6 +152,81 @@ Marptalk uses a three-stage pipeline:
 1. **Stage A**: Extract speaker notes from Marp markdown
 2. **Stage B**: Generate audio files using Google Cloud TTS
 3. **Stage C**: Create self-playing HTML presentation
+
+## Subtitle and Chapter Generation
+
+Marptalk can generate additional outputs to help with video publishing:
+
+### SRT Subtitles
+
+Generate standard SRT subtitle files for video captions:
+
+```bash
+node src/generate.js my-presentation.md --generate-srt
+```
+
+The SRT file includes:
+- Sequential numbering
+- Precise timestamps (HH:MM:SS,mmm format)  
+- Speaker notes as caption text
+- Automatic duration calculation based on word count (150 words/minute)
+
+**Example SRT output:**
+```
+1
+00:00:00,000 --> 00:00:13,599
+Welcome to Marptalk, a revolutionary system for creating automated narrated presentations.
+
+2
+00:00:13,599 --> 00:00:38,399
+Traditional presentation narration faces several challenges...
+```
+
+### YouTube Chapter Markers
+
+Generate YouTube-compatible chapter markers:
+
+```bash
+node src/generate.js my-presentation.md --generate-chapters
+```
+
+The chapters file includes:
+- Timestamps in YouTube format (M:SS or H:MM:SS)
+- Slide titles as chapter names
+- Ready to copy-paste into YouTube video descriptions
+
+**Example chapters output:**
+```
+0:00 - Welcome to Marptalk
+0:13 - The Problem
+0:38 - The Marptalk Solution
+1:01 - Key Features
+```
+
+### Combined Usage
+
+Generate both SRT and chapters together:
+
+```bash
+node src/generate.js my-presentation.md --generate-srt --generate-chapters
+```
+
+### Custom Filenames
+
+Specify custom output filenames:
+
+```bash
+node src/generate.js my-presentation.md \
+  --generate-srt --srt-filename "my-captions.srt" \
+  --generate-chapters --chapters-filename "my-chapters.txt"
+```
+
+### Uploading to YouTube
+
+1. Upload your video file to YouTube
+2. In YouTube Studio, go to "Subtitles" and upload the generated `.srt` file
+3. Copy the contents of the chapters file and paste into your video description
+4. Save changes - your video now has both captions and chapter markers!
 
 ## Requirements
 
