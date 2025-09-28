@@ -7,11 +7,8 @@
     "marptalk": "src/generate.js"
   },
   "scripts": {
-    "start": "node src/generate.js",
-    "demo": "node src/generate.js examples/demo.md",
-    "video": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters",
-    "video-dev": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters --dev-mode",
-    "dev": "node src/generate.js examples/demo.md --dev-mode"
+    "demo": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters --generate-tts",
+    "demo-dev": "node src/generate.js examples/demo.md --generate-video --generate-srt --generate-chapters"
   },
   "keywords": [],
   "author": "",

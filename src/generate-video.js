@@ -11,15 +11,17 @@ const puppeteer = require('puppeteer-core');
  * @param {number} options.width - Video width in pixels (default: 1920)
  * @param {number} options.height - Video height in pixels (default: 1080)
  * @param {number} options.fps - Frames per second (default: 30)
+ * @param {string} options.subtitleMode - Subtitle mode: "off", "soft", or "hard"
  * @returns {Promise<string>} Path to generated video file
  */
-async function generateVideo({ 
-  presentationPath, 
-  outputDir, 
+async function generateVideo({
+  presentationPath,
+  outputDir,
   filename = 'presentation.mp4',
   width = 1920,
   height = 1080,
-  fps = 30
+  fps = 30,
+  subtitleMode = 'soft'
 }) {
   console.log('🎬 Starting video recording...');
   console.log('📄 Presentation:', presentationPath);
@@ -200,7 +202,8 @@ async function generateVideo({
           outputPath: path.join(outputDir, filename),
           slides: presentationInfo.totalSlides,
           slideDurations,
-          subtitlesPath: path.join(outputDir, 'subtitles.srt')
+          subtitlesPath: path.join(outputDir, 'subtitles.srt'),
+          subtitleMode: subtitleMode || 'soft'
         });
 
         console.log('✅ Video generation complete');
@@ -301,9 +304,10 @@ async function getAudioDurations(audioDir, slideCount) {
  * @param {number} options.slides - Total number of slides
  * @param {number[]} options.slideDurations - Duration in seconds for each slide
  * @param {string} options.subtitlesPath - Path to SRT subtitles file
+ * @param {string} options.subtitleMode - Subtitle mode: "off", "soft", or "hard"
  * @returns {Promise<string>} Path to created video file
  */
-async function createVideoWithFFmpeg({ framesDir, audioDir, outputPath, slides, slideDurations, subtitlesPath }) {
+async function createVideoWithFFmpeg({ framesDir, audioDir, outputPath, slides, slideDurations, subtitlesPath, subtitleMode = 'soft' }) {
   const { spawn } = require('child_process');
 
   // First, create a combined audio file from all slide audio
@@ -339,19 +343,40 @@ async function createVideoWithFFmpeg({ framesDir, audioDir, outputPath, slides, 
     '-f', 'concat',
     '-safe', '0',
     '-i', concatFilePath, // Slide timing file
-    '-i', combinedAudioPath, // Combined audio
-    '-c:v', 'libx264',
-    '-c:a', 'aac',
-    '-pix_fmt', 'yuv420p',
-    '-shortest' // End when shortest input ends
+    '-i', combinedAudioPath // Combined audio
   ];
 
-  // Add subtitles if they exist
-  if (await fs.pathExists(subtitlesPath)) {
-    console.log('📝 Adding subtitles to video...');
+  // Handle subtitles based on the chosen mode
+  if (await fs.pathExists(subtitlesPath) && subtitleMode !== 'off') {
+    if (subtitleMode === 'soft') {
+      console.log('📝 Adding soft subtitles to video (toggleable by viewer)...');
+      ffmpegArgs.push('-i', subtitlesPath); // Add subtitle input
+    } else if (subtitleMode === 'hard') {
+      console.log('📝 Adding hard subtitles to video (always visible)...');
+      // For hard subtitles, we'll add the filter later
+    }
+  } else if (subtitleMode === 'off') {
+    console.log('📝 Skipping subtitles (disabled)...');
+  }
+
+  // Add encoding options
+  ffmpegArgs.push('-c:v', 'libx264');
+  ffmpegArgs.push('-c:a', 'aac');
+  ffmpegArgs.push('-pix_fmt', 'yuv420p');
+
+  // Handle hard subtitles with video filter
+  if (await fs.pathExists(subtitlesPath) && subtitleMode === 'hard') {
     ffmpegArgs.push('-vf', `subtitles=${subtitlesPath.replace(/\\/g, '/')}`);
   }
 
+  // Handle soft subtitles
+  if (await fs.pathExists(subtitlesPath) && subtitleMode === 'soft') {
+    ffmpegArgs.push('-c:s', 'mov_text'); // Use mov_text codec for MP4 subtitle stream
+    ffmpegArgs.push('-metadata:s:s:0', 'language=eng');
+    ffmpegArgs.push('-metadata:s:s:0', 'title=English');
+  }
+
+  ffmpegArgs.push('-shortest'); // End when shortest input ends
   ffmpegArgs.push(outputPath);
 
   console.log('🔧 FFmpeg command:', 'ffmpeg', ffmpegArgs.join(' '));

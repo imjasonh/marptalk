@@ -59,15 +59,17 @@ node src/generate.js <input.md> [options]
 - `--language <code>`: Language code (default: `en-US`)
 - `--key-file <path>`: Path to Google Cloud service account key file
 - `--max-slides <num>`: Maximum slides for testing
-- `--generate-srt`: Generate SRT subtitle file for video captions
-- `--generate-chapters`: Generate YouTube chapter markers file
+- `--generate-tts`: Generate TTS audio files (default: false)
+- `--generate-srt`: Generate SRT subtitle file for video captions (default: false)
+- `--generate-chapters`: Generate YouTube chapter markers file (default: false)
 - `--srt-filename <name>`: Custom filename for SRT file (default: `subtitles.srt`)
 - `--chapters-filename <name>`: Custom filename for chapters file (default: `chapters.txt`)
-- `--generate-video`: Generate MP4 video of the presentation with synchronized audio
+- `--generate-video`: Generate MP4 video of the presentation with synchronized audio (default: false)
 - `--video-filename <name>`: Custom filename for video file (default: `presentation.mp4`)
 - `--video-width <pixels>`: Video width in pixels (default: 1920)
 - `--video-height <pixels>`: Video height in pixels (default: 1080)
 - `--video-fps <number>`: Video frames per second (default: 30)
+- `--video-subtitles <mode>`: Subtitle mode: `"off"`, `"soft"` (toggleable), or `"hard"` (burned-in) (default: `soft`)
 
 ### Popular GCP Voices
 
@@ -129,11 +131,17 @@ node src/generate.js my-presentation.md --voice en-US-Journey-F --language en-US
 # Test with first 3 slides only
 node src/generate.js my-presentation.md --max-slides 3
 
+# Skip TTS generation (use existing audio files, saves money)
+node src/generate.js my-presentation.md --no-generate-tts
+
 # Generate with SRT subtitles and YouTube chapters
 node src/generate.js my-presentation.md --generate-srt --generate-chapters
 
 # Generate complete video with subtitles and chapters
 node src/generate.js my-presentation.md --generate-video --generate-srt --generate-chapters
+
+# Quick video generation using existing audio
+node src/generate.js my-presentation.md --no-generate-tts --generate-video --generate-srt
 
 # Custom subtitle and chapter filenames
 node src/generate.js my-presentation.md --generate-srt --generate-chapters --srt-filename "my-captions.srt" --chapters-filename "my-chapters.txt"
@@ -247,15 +255,22 @@ Generate complete MP4 videos of your presentations with synchronized audio, subt
 # Basic video generation
 node src/generate.js my-presentation.md --generate-video
 
-# Video with embedded subtitles and chapters
+# Video with soft subtitles and chapters (subtitles can be toggled)
 node src/generate.js my-presentation.md --generate-video --generate-srt --generate-chapters
+
+# Video without subtitles
+node src/generate.js my-presentation.md --generate-video --video-subtitles off
+
+# Video with hard-coded subtitles (always visible)
+node src/generate.js my-presentation.md --generate-video --generate-srt --video-subtitles hard
 
 # Custom video settings
 node src/generate.js my-presentation.md \
   --generate-video \
   --video-filename "my-presentation.mp4" \
   --video-width 1920 \
-  --video-height 1080
+  --video-height 1080 \
+  --video-subtitles soft
 ```
 
 ### How Video Generation Works
@@ -272,7 +287,7 @@ Marptalk uses an efficient static slide approach:
 
 - **Perfect Synchronization**: Each slide shows for its exact audio duration
 - **High Quality**: 1920×1080 H.264 video with AAC audio
-- **Embedded Subtitles**: SRT subtitles burned into the video
+- **Flexible Subtitles**: Choose between soft (toggleable), hard (burned-in), or no subtitles
 - **Efficient Processing**: Static slides, not screen recording
 - **Fast Generation**: Typical presentation renders in under 30 seconds
 
@@ -285,6 +300,14 @@ Marptalk uses an efficient static slide approach:
 - `video_frame_*.jpg` - Sample frames for verification
 - `combined_audio.wav` - Combined audio track
 - `slides.txt` - FFmpeg timing configuration
+
+### Subtitle Modes
+
+- **`soft` (default)**: Subtitles are embedded as a separate stream that viewers can turn on/off
+- **`hard`**: Subtitles are burned into the video and always visible
+- **`off`**: No subtitles are included in the video
+
+**Recommendation**: Use `soft` subtitles for most cases as they provide accessibility while allowing viewers to control visibility.
 
 ### Video Requirements
 
@@ -328,8 +351,10 @@ Your generated MP4 files are ready for direct upload to:
 - Write speaker notes in a conversational tone
 - Keep notes concise but informative
 - Test different voices to find what works best
+- Use `--no-generate-tts` for faster iteration when updating slides/styles
 - Use the pause/resume controls during live presentations
 - The system handles browser autoplay restrictions gracefully
+- Soft subtitles are recommended for accessibility and viewer choice
 
 ## Troubleshooting
 

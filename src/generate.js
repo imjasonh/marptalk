@@ -21,7 +21,7 @@ program
   .option('--language <code>', 'Language code (e.g., en-US, es-ES)', 'en-US')
   .option('--key-file <path>', 'Path to Google Cloud service account key file')
   .option('--max-slides <num>', 'Maximum number of slides to generate audio for (for testing)', parseInt)
-  .option('--dev-mode', 'Development mode: skip TTS generation, only update HTML/JS')
+  .option('--generate-tts', 'Generate TTS audio files')
   .option('--generate-srt', 'Generate SRT subtitle file')
   .option('--generate-chapters', 'Generate YouTube chapter markers file')
   .option('--srt-filename <name>', 'Custom filename for SRT file', 'subtitles.srt')
@@ -31,6 +31,7 @@ program
   .option('--video-width <width>', 'Video width in pixels', parseInt, 1920)
   .option('--video-height <height>', 'Video height in pixels', parseInt, 1080)
   .option('--video-fps <fps>', 'Video frames per second', parseInt, 30)
+  .option('--video-subtitles <mode>', 'Subtitle mode: "off", "soft" (toggleable), or "hard" (burned-in)', 'soft')
   .action(async (input, options) => {
     try {
       const inputFile = path.resolve(input);
@@ -41,23 +42,14 @@ program
         process.exit(1);
       }
 
-      if (options.devMode) {
-        console.log('🚀 Starting Marptalk in DEVELOPMENT MODE...');
-        console.log('📁 Input:', inputFile);
-        console.log('📁 Output:', outputDir);
-        console.log('⚠️  Skipping TTS generation - using existing audio files');
-        console.log();
-      } else {
-        console.log('🚀 Starting Marp presentation generation...');
-        console.log('📁 Input:', inputFile);
-        console.log('📁 Output:', outputDir);
-        console.log();
-      }
+      console.log('🚀 Starting Marp presentation generation...');
+      console.log('📁 Input:', inputFile);
+      console.log('📁 Output:', outputDir);
 
       await fs.ensureDir(outputDir);
       await fs.ensureDir(path.join(outputDir, 'audio'));
 
-      if (!options.devMode) {
+      if (options.generateTts) {
         await fs.ensureDir('.temp');
 
         console.log('📝 Stage A: Extracting speaker notes...');
@@ -83,18 +75,18 @@ program
         console.log('✅ Audio generation complete');
         console.log();
       } else {
-        console.log('🔧 Development mode: Skipping stages A & B (notes extraction and TTS)');
+        console.log('🔧 Skipping stages A & B (notes extraction and TTS)');
         console.log();
       }
 
       // Stage D: Generate subtitles and chapters (if requested)
       if (options.generateSrt || options.generateChapters) {
         console.log('📝 Stage D: Generating subtitles and chapters...');
-        
-        // Ensure we have extracted notes (either from Stage A or development mode)
+
+        // Ensure we have extracted notes (either from Stage A or when TTS is disabled)
         let slideCount;
-        if (options.devMode) {
-          // In dev mode, we need to extract notes for subtitle generation
+        if (!options.generateTts) {
+          // When TTS is disabled, we need to extract notes for subtitle generation
           await fs.ensureDir('.temp');
           slideCount = await extractNotes(inputFile);
         } else {
@@ -139,9 +131,9 @@ program
       if (options.generateVideo) {
         console.log('🎬 Stage D: Generating video recording...');
         const presentationPath = path.join(outputDir, 'index.html');
-        
+
         console.log(`📐 Video dimensions: ${options.videoWidth}x${options.videoHeight} @ ${options.videoFps}fps`);
-        
+
         try {
           const videoResult = await generateVideo({
             presentationPath,
@@ -149,22 +141,23 @@ program
             filename: options.videoFilename,
             width: options.videoWidth || 1920,
             height: options.videoHeight || 1080,
-            fps: options.videoFps || 30
+            fps: options.videoFps || 30,
+            subtitleMode: options.videoSubtitles || 'soft'
           });
-          
+
           console.log(`🎬 Video recording generated: ${videoResult}`);
         } catch (error) {
           console.error('❌ Video generation failed:', error.message);
           console.log('💡 Make sure Chrome or Chromium is installed on your system');
         }
-        
+
         console.log('✅ Video generation complete');
         console.log();
       }
 
       console.log('🎉 Presentation ready!');
       console.log(`📂 Open: ${path.join(outputDir, 'index.html')}`);
-      
+
       if (options.generateVideo) {
         console.log('🎬 Video recording info available in output directory');
       }
