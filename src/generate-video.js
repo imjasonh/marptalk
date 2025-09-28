@@ -38,12 +38,16 @@ async function generateVideo({
     // Try to find a Chrome/Chromium executable
     const executablePath = await findChromeExecutable();
     
+    // Ensure dimensions are integers and within reasonable bounds
+    const actualWidth = Math.max(800, Math.min(3840, Math.floor(width)));
+    const actualHeight = Math.max(600, Math.min(2160, Math.floor(height)));
+    
     browser = await puppeteer.launch({
       executablePath,
-      headless: true, // Changed to headless for recording
+      headless: true,
       defaultViewport: {
-        width,
-        height
+        width: actualWidth,
+        height: actualHeight
       },
       args: [
         '--no-sandbox',
@@ -61,7 +65,7 @@ async function generateVideo({
     });
 
     page = await browser.newPage();
-    await page.setViewport({ width, height });
+    await page.setViewport({ width: actualWidth, height: actualHeight });
 
     // Allow autoplay and media access
     await page.evaluateOnNewDocument(() => {
@@ -234,7 +238,7 @@ async function generateVideo({
       actualDuration: screenshots.length > 0 ? (screenshots[screenshots.length - 1]?.timestamp || 0) / 1000 : 0,
       estimatedDuration: totalDuration,
       fps: actualFPS,
-      dimensions: { width, height },
+      dimensions: { width: actualWidth, height: actualHeight },
       slides: presentationInfo.totalSlides,
       created: new Date().toISOString(),
       frameFiles: [

@@ -140,14 +140,16 @@ program
         console.log('🎬 Stage D: Generating video recording...');
         const presentationPath = path.join(outputDir, 'index.html');
         
+        console.log(`📐 Video dimensions: ${options.videoWidth}x${options.videoHeight} @ ${options.videoFps}fps`);
+        
         try {
           const videoResult = await generateVideo({
             presentationPath,
             outputDir,
             filename: options.videoFilename,
-            width: options.videoWidth,
-            height: options.videoHeight,
-            fps: options.videoFps
+            width: options.videoWidth || 1920,
+            height: options.videoHeight || 1080,
+            fps: options.videoFps || 30
           });
           
           console.log(`🎬 Video recording generated: ${videoResult}`);
