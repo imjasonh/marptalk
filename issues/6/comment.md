@@ -1,0 +1,1 @@
+I suggest using Puppeteer for recording audio and video. Additionally, it would be beneficial to research libraries that can facilitate subtitles and chapters.
