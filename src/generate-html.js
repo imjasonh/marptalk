@@ -100,6 +100,7 @@ async function generateHtml(inputFile, outputDir) {
       <button id="pausePresentation">⏸ Pause</button>
       <button id="stopPresentation">⏹ Stop</button>
       <button id="toggleMute">🔊 Sound</button>
+      <button id="toggleNavAudio" title="Audio plays on navigation">🎵 Nav Audio</button>
       <span id="slideCounter">Slide: 1</span>
     </div>
     <div class="slide-progress" id="slideProgress"></div>

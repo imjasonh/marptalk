@@ -5,6 +5,7 @@
   let isPlaying = false;
   let isPaused = false;
   let isMuted = false;
+  let audioOnNavigation = true; // Play audio on manual navigation
   let totalSlides = 0;
 
   function log(...args) {
@@ -78,8 +79,9 @@
     }
   }
 
-  function playSlideAudio(slideIndex) {
-    if (isPaused || isMuted) return;
+  function playSlideAudio(slideIndex, forcePlay = false) {
+    if (isMuted) return;
+    if (!forcePlay && isPaused) return;
 
     stopCurrentAudio();
 
@@ -119,14 +121,16 @@
 
     currentAudio.oncanplay = () => {
       log(`Audio ready for slide ${slideIndex}`);
-      if (isPlaying && !isPaused) {
+      if ((isPlaying && !isPaused) || (forcePlay && audioOnNavigation)) {
         currentAudio.play().catch(error => {
           log(`Autoplay failed for slide ${slideIndex}:`, error);
           hideAudioIndicator();
 
-          setTimeout(() => {
-            goToNextSlide();
-          }, 2000);
+          if (isPlaying && !isPaused) {
+            setTimeout(() => {
+              goToNextSlide();
+            }, 2000);
+          }
         });
       }
     };
@@ -143,6 +147,11 @@
 
     const startBtn = document.getElementById('startPresentation');
     if (startBtn) startBtn.textContent = '▶ Started';
+
+    // Force slide change detection to trigger audio
+    setTimeout(() => {
+      handleSlideChange(true); // Force the slide change handler
+    }, 300);
   }
 
   function pausePresentation() {
@@ -192,16 +201,37 @@
     }
   }
 
-  function handleSlideChange() {
+  function toggleAudioOnNavigation() {
+    audioOnNavigation = !audioOnNavigation;
+
+    const navAudioBtn = document.getElementById('toggleNavAudio');
+    if (navAudioBtn) {
+      navAudioBtn.textContent = audioOnNavigation ? '🎵 Nav Audio' : '🔇 Nav Silent';
+      navAudioBtn.title = audioOnNavigation ? 'Audio plays on navigation' : 'Audio only in auto-play mode';
+    }
+
+    log(`Audio on navigation: ${audioOnNavigation ? 'enabled' : 'disabled'}`);
+  }
+
+  let lastSlideIndex = 1; // Track the last slide to detect changes
+
+  function handleSlideChange(force = false) {
     const current = getCurrentSlideIndex();
-    log(`Slide changed to: ${current}`);
+
+    // Only proceed if slide actually changed (unless forced)
+    if (!force && current === lastSlideIndex) return;
+
+    lastSlideIndex = current;
+    log(`Slide changed to: ${current}${force ? ' (forced)' : ''}`);
 
     updateSlideCounter(current);
     updateProgressBar(current);
 
-    if (isPlaying && !isPaused && !isMuted) {
+    // Play audio during auto-play mode OR manual navigation (if enabled)
+    if (!isMuted && ((isPlaying && !isPaused) || audioOnNavigation)) {
       setTimeout(() => {
-        playSlideAudio(current);
+        const forcePlay = !isPlaying; // Force play for manual navigation
+        playSlideAudio(current, forcePlay);
       }, 300);
     }
   }
@@ -223,23 +253,24 @@
       case 'ArrowRight':
       case 'ArrowDown':
       case 'PageDown':
-        if (!isPlaying) {
-          event.preventDefault();
-          goToNextSlide();
-        }
+        // Don't prevent default - let Marp handle navigation
+        // We'll catch the hashchange event instead
         break;
       case 'ArrowLeft':
       case 'ArrowUp':
       case 'PageUp':
-        if (!isPlaying) {
-          event.preventDefault();
-          goToPrevSlide();
-        }
+        // Don't prevent default - let Marp handle navigation
+        // We'll catch the hashchange event instead
         break;
       case 'm':
       case 'M':
         event.preventDefault();
         toggleMute();
+        break;
+      case 'n':
+      case 'N':
+        event.preventDefault();
+        toggleAudioOnNavigation();
         break;
     }
   }
@@ -249,14 +280,27 @@
     const pauseBtn = document.getElementById('pausePresentation');
     const stopBtn = document.getElementById('stopPresentation');
     const muteBtn = document.getElementById('toggleMute');
+    const navAudioBtn = document.getElementById('toggleNavAudio');
 
     if (startBtn) startBtn.addEventListener('click', startPresentation);
     if (pauseBtn) pauseBtn.addEventListener('click', pausePresentation);
     if (stopBtn) stopBtn.addEventListener('click', stopPresentation);
     if (muteBtn) muteBtn.addEventListener('click', toggleMute);
+    if (navAudioBtn) navAudioBtn.addEventListener('click', toggleAudioOnNavigation);
 
+    // Listen for various slide change events
     window.addEventListener('hashchange', handleSlideChange);
     document.addEventListener('keydown', handleKeyPress);
+
+    // Also listen for click events on the document to catch navigation
+    document.addEventListener('click', () => {
+      setTimeout(handleSlideChange, 100); // Small delay to let navigation complete
+    });
+
+    // Periodically check for slide changes (fallback)
+    setInterval(() => {
+      handleSlideChange();
+    }, 500);
 
     window.addEventListener('beforeunload', () => {
       stopCurrentAudio();
@@ -280,8 +324,11 @@
     updateSlideCounter(current);
     updateProgressBar(current);
 
+    // Initialize navigation audio button
+    toggleAudioOnNavigation(); // Set initial state
+
     log('Marptalk automation ready');
-    log('Controls: Space=Start/Pause, Escape=Stop, M=Mute, Arrows=Navigate (when stopped)');
+    log('Controls: Space=Start/Pause, Escape=Stop, M=Mute, N=Nav Audio, Arrows=Navigate');
   }
 
   initialize();

@@ -173,14 +173,9 @@ Marptalk uses a three-stage pipeline:
 - Ensure billing is set up (free tier available)
 
 ### Voice/Language errors
-- Run the test script to see available voices
 - Check [GCP TTS documentation](https://cloud.google.com/text-to-speech/docs/voices) for supported voices
 - Verify language code matches voice name (e.g., `en-US` with `en-US-Journey-D`)
 
 ### Missing speaker notes
 - Make sure notes are enclosed in `<!-- -->` comments
 - Verify the Marp CLI extracted notes to `.temp/`
-
-## License
-
-ISC

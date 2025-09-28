@@ -19,6 +19,7 @@ program
   .option('--language <code>', 'Language code (e.g., en-US, es-ES)', 'en-US')
   .option('--key-file <path>', 'Path to Google Cloud service account key file')
   .option('--max-slides <num>', 'Maximum number of slides to generate audio for (for testing)', parseInt)
+  .option('--dev-mode', 'Development mode: skip TTS generation, only update HTML/JS')
   .action(async (input, options) => {
     try {
       const inputFile = path.resolve(input);
@@ -29,37 +30,51 @@ program
         process.exit(1);
       }
 
-      console.log('🚀 Starting Marp presentation generation...');
-      console.log('📁 Input:', inputFile);
-      console.log('📁 Output:', outputDir);
-      console.log();
+      if (options.devMode) {
+        console.log('🚀 Starting Marptalk in DEVELOPMENT MODE...');
+        console.log('📁 Input:', inputFile);
+        console.log('📁 Output:', outputDir);
+        console.log('⚠️  Skipping TTS generation - using existing audio files');
+        console.log();
+      } else {
+        console.log('🚀 Starting Marp presentation generation...');
+        console.log('📁 Input:', inputFile);
+        console.log('📁 Output:', outputDir);
+        console.log();
+      }
 
       await fs.ensureDir(outputDir);
       await fs.ensureDir(path.join(outputDir, 'audio'));
-      await fs.ensureDir('.temp');
 
-      console.log('📝 Stage A: Extracting speaker notes...');
-      const slideCount = await extractNotes(inputFile);
-      console.log(`✅ Extracted notes for ${slideCount} slides`);
-      console.log();
+      if (!options.devMode) {
+        await fs.ensureDir('.temp');
 
-      console.log('🎵 Stage B: Generating audio files...');
-      const maxSlides = options.maxSlides || slideCount;
-      const actualSlideCount = Math.min(slideCount, maxSlides);
+        console.log('📝 Stage A: Extracting speaker notes...');
+        const slideCount = await extractNotes(inputFile);
+        console.log(`✅ Extracted notes for ${slideCount} slides`);
+        console.log();
 
-      if (maxSlides < slideCount) {
-        console.log(`⚠️  Limiting to first ${maxSlides} slides for testing`);
+        console.log('🎵 Stage B: Generating audio files...');
+        const maxSlides = options.maxSlides || slideCount;
+        const actualSlideCount = Math.min(slideCount, maxSlides);
+
+        if (maxSlides < slideCount) {
+          console.log(`⚠️  Limiting to first ${maxSlides} slides for testing`);
+        }
+
+        await generateAudio({
+          slideCount: actualSlideCount,
+          outputDir: path.join(outputDir, 'audio'),
+          voice: options.voice,
+          languageCode: options.language,
+          keyFile: options.keyFile
+        });
+        console.log('✅ Audio generation complete');
+        console.log();
+      } else {
+        console.log('🔧 Development mode: Skipping stages A & B (notes extraction and TTS)');
+        console.log();
       }
-
-      await generateAudio({
-        slideCount: actualSlideCount,
-        outputDir: path.join(outputDir, 'audio'),
-        voice: options.voice,
-        languageCode: options.language,
-        keyFile: options.keyFile
-      });
-      console.log('✅ Audio generation complete');
-      console.log();
 
       console.log('🌐 Stage C: Generating HTML presentation...');
       await generateHtml(inputFile, outputDir);
