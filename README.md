@@ -1,0 +1,186 @@
+# Marptalk
+
+Automated narrated Marp presentations with Google Cloud Text-to-Speech.
+
+## Features
+
+- 🎤 AI-powered narration with natural voices
+- 🔄 Automatic slide advancement synced with audio
+- ⚡ Fast regeneration when content changes
+- 🎛️ Interactive controls for presentations
+- 📱 Works in any browser - no special software needed
+
+## Quick Start
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Set up Google Cloud authentication**:
+   ```bash
+   # Option 1: Use gcloud CLI (recommended)
+   gcloud auth application-default login
+
+   # Option 2: Use service account key file
+   export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
+   ```
+
+3. **Run the demo**:
+   ```bash
+   npm run demo
+   ```
+
+4. **Open the result**:
+   ```bash
+   open dist/index.html
+   ```
+
+## Usage
+
+### Basic Usage
+
+```bash
+node src/generate.js <input.md> [options]
+```
+
+### Options
+
+- `-o, --output <dir>`: Output directory (default: `dist`)
+- `--voice <voice>`: GCP TTS voice name (default: `en-US-Journey-D`)
+- `--language <code>`: Language code (default: `en-US`)
+- `--key-file <path>`: Path to Google Cloud service account key file
+- `--max-slides <num>`: Maximum slides for testing
+
+### Popular GCP Voices
+
+**English (en-US):**
+- `en-US-Journey-D` - Natural, conversational (default)
+- `en-US-Journey-F` - Warm, friendly female voice
+- `en-US-Neural2-A` - Professional male voice
+- `en-US-Neural2-C` - Clear female voice
+- `en-US-Neural2-J` - Energetic male voice
+
+**Other Languages:**
+- `es-ES-Neural2-A` - Spanish (Spain)
+- `fr-FR-Neural2-A` - French
+- `de-DE-Neural2-B` - German
+- `ja-JP-Neural2-B` - Japanese
+
+## Google Cloud Setup
+
+### Prerequisites
+
+1. **Enable Text-to-Speech API**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com)
+   - Enable the Cloud Text-to-Speech API
+   - Set up billing (has generous free tier)
+
+## Creating Presentations
+
+### 1. Write your Marp presentation
+
+Create a `.md` file with Marp frontmatter and speaker notes:
+
+```markdown
+---
+marp: true
+theme: default
+---
+
+# My Slide Title
+
+Some slide content here.
+
+<!--
+This is the speaker note that will be converted to audio.
+Make sure to write natural, conversational text that sounds
+good when spoken aloud.
+-->
+
+---
+
+# Second Slide
+
+More content...
+
+<!--
+Another speaker note for the second slide.
+-->
+```
+
+### 2. Generate the presentation
+
+```bash
+# Basic generation
+node src/generate.js my-presentation.md
+
+# With custom voice and language
+node src/generate.js my-presentation.md --voice en-US-Journey-F --language en-US
+
+# Test with first 3 slides only
+node src/generate.js my-presentation.md --max-slides 3
+```
+
+### 3. Present
+
+Open `dist/index.html` in your browser and use the controls:
+
+- **▶ Start**: Begin automated playback
+- **⏸ Pause**: Pause/resume presentation
+- **⏹ Stop**: Stop and return to manual mode
+- **🔊 Sound**: Toggle audio on/off
+
+### Keyboard Shortcuts
+
+- `Space`: Start/pause presentation
+- `Escape`: Stop presentation
+- `M`: Toggle mute
+- `Arrow keys`: Navigate slides (when stopped)
+
+## How It Works
+
+Marptalk uses a three-stage pipeline:
+
+1. **Stage A**: Extract speaker notes from Marp markdown
+2. **Stage B**: Generate audio files using Google Cloud TTS
+3. **Stage C**: Create self-playing HTML presentation
+
+## Requirements
+
+- Node.js 16+
+- Google Cloud account with Text-to-Speech API enabled
+- Modern web browser
+
+## Tips
+
+- Write speaker notes in a conversational tone
+- Keep notes concise but informative
+- Test different voices to find what works best
+- Use the pause/resume controls during live presentations
+- The system handles browser autoplay restrictions gracefully
+
+## Troubleshooting
+
+### Audio doesn't play
+- Check browser autoplay settings
+- Try clicking the start button instead of letting it auto-start
+- Verify audio files were generated in `dist/audio/`
+
+### Authentication errors
+- Verify `gcloud auth application-default login` worked
+- Check that Text-to-Speech API is enabled in your GCP project
+- Ensure billing is set up (free tier available)
+
+### Voice/Language errors
+- Run the test script to see available voices
+- Check [GCP TTS documentation](https://cloud.google.com/text-to-speech/docs/voices) for supported voices
+- Verify language code matches voice name (e.g., `en-US` with `en-US-Journey-D`)
+
+### Missing speaker notes
+- Make sure notes are enclosed in `<!-- -->` comments
+- Verify the Marp CLI extracted notes to `.temp/`
+
+## License
+
+ISC

@@ -1,0 +1,23 @@
+{
+  "name": "marptalk",
+  "version": "1.0.0",
+  "description": "Automated narrated Marp presentations with Google Cloud Text-to-Speech",
+  "main": "src/generate.js",
+  "bin": {
+    "marptalk": "src/generate.js"
+  },
+  "scripts": {
+    "start": "node src/generate.js",
+    "demo": "node src/generate.js examples/demo.md",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^6.3.0",
+    "@marp-team/marp-cli": "^4.2.3",
+    "commander": "^14.0.1",
+    "fs-extra": "^11.3.2"
+  }
+}
