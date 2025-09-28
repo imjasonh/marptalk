@@ -5,11 +5,11 @@ duration 26.544
 file '/Users/jason/git/marptalk/dist/video_frames/slide_03.jpg'
 duration 30.144
 file '/Users/jason/git/marptalk/dist/video_frames/slide_04.jpg'
-duration 24.528
+duration 25.776
 file '/Users/jason/git/marptalk/dist/video_frames/slide_05.jpg'
-duration 42.576
+duration 40.536
 file '/Users/jason/git/marptalk/dist/video_frames/slide_06.jpg'
-duration 29.136
+duration 31.464
 file '/Users/jason/git/marptalk/dist/video_frames/slide_07.jpg'
-duration 36.864
+duration 38.904
 file '/Users/jason/git/marptalk/dist/video_frames/slide_07.jpg'
