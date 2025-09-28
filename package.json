@@ -20,6 +20,7 @@
     "@google-cloud/text-to-speech": "^6.3.0",
     "@marp-team/marp-cli": "^4.2.3",
     "commander": "^14.0.1",
-    "fs-extra": "^11.3.2"
+    "fs-extra": "^11.3.2",
+    "puppeteer-core": "^22.15.0"
   }
 }

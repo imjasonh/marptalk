@@ -61,6 +61,11 @@ node src/generate.js <input.md> [options]
 - `--generate-chapters`: Generate YouTube chapter markers file
 - `--srt-filename <name>`: Custom filename for SRT file (default: `subtitles.srt`)
 - `--chapters-filename <name>`: Custom filename for chapters file (default: `chapters.txt`)
+- `--generate-video`: Generate video recording of the presentation (experimental)
+- `--video-filename <name>`: Custom filename for video info (default: `presentation.mp4`)
+- `--video-width <pixels>`: Video width in pixels (default: 1920)
+- `--video-height <pixels>`: Video height in pixels (default: 1080)
+- `--video-fps <number>`: Video frames per second (default: 30)
 
 ### Popular GCP Voices
 
@@ -227,6 +232,47 @@ node src/generate.js my-presentation.md \
 2. In YouTube Studio, go to "Subtitles" and upload the generated `.srt` file
 3. Copy the contents of the chapters file and paste into your video description
 4. Save changes - your video now has both captions and chapter markers!
+
+### Video Recording (Experimental)
+
+Generate a video recording of your presentation using Puppeteer:
+
+```bash
+node src/generate.js my-presentation.md --generate-video
+```
+
+This feature:
+- Captures screenshots of the presentation at specified FPS
+- Records each slide transition
+- Generates sample frames for verification
+- Provides foundation for full video generation
+
+**Video options:**
+```bash
+node src/generate.js my-presentation.md \
+  --generate-video \
+  --video-filename "my-presentation.mp4" \
+  --video-width 1920 \
+  --video-height 1080 \
+  --video-fps 30
+```
+
+**Output files:**
+- `video_info.json` - Recording metadata and statistics
+- `video_frame_first.jpg` - First frame sample
+- `video_frame_middle.jpg` - Middle frame sample  
+- `video_frame_last.jpg` - Last frame sample
+
+**Note:** This is currently a proof-of-concept that captures presentation frames. To generate actual MP4 videos, you can:
+
+1. Install FFmpeg: `apt-get install ffmpeg`
+2. Use the captured frames with existing audio files
+3. Merge with generated SRT subtitles
+
+Example FFmpeg command:
+```bash
+ffmpeg -r 10 -i frames/%d.jpg -i audio/combined.wav -c:v libx264 -c:a aac -scodec mov_text -metadata title="My Presentation" output.mp4
+```
 
 ## Requirements
 
