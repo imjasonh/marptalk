@@ -3,3 +3,7 @@ node_modules/
 *.log
 .env
 .DS_Store
+
+# Generated output files (can be regenerated)
+dist/video_*.jpg
+dist/video_*.json

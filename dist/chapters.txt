@@ -1,8 +1,8 @@
 0:00 - Slide 1
 0:13 - Welcome to Marptalk
 0:38 - The Problem
-1:01 - The Marptalk Solution
-1:23 - Key Features
-1:49 - Technical Implementation
-2:12 - Getting Started
-2:37 - Demo Complete!
+1:07 - The Marptalk Solution
+1:36 - Key Features
+2:13 - Technical Implementation
+2:44 - Getting Started
+3:22 - Demo Complete!

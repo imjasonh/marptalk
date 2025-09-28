@@ -7,6 +7,7 @@ const { extractNotes } = require('./extract-notes');
 const { generateAudio } = require('./generate-audio');
 const { generateHtml } = require('./generate-html');
 const { generateSubtitles } = require('./generate-subtitles');
+const { generateVideo } = require('./generate-video');
 
 const program = new Command();
 
@@ -25,6 +26,11 @@ program
   .option('--generate-chapters', 'Generate YouTube chapter markers file')
   .option('--srt-filename <name>', 'Custom filename for SRT file', 'subtitles.srt')
   .option('--chapters-filename <name>', 'Custom filename for chapters file', 'chapters.txt')
+  .option('--generate-video', 'Generate video recording of the presentation')
+  .option('--video-filename <name>', 'Custom filename for video file', 'presentation.mp4')
+  .option('--video-width <width>', 'Video width in pixels', parseInt, 1920)
+  .option('--video-height <height>', 'Video height in pixels', parseInt, 1080)
+  .option('--video-fps <fps>', 'Video frames per second', parseInt, 30)
   .action(async (input, options) => {
     try {
       const inputFile = path.resolve(input);
@@ -129,8 +135,39 @@ program
       console.log('✅ HTML generation complete');
       console.log();
 
+      // Stage D: Video recording (if requested)
+      if (options.generateVideo) {
+        console.log('🎬 Stage D: Generating video recording...');
+        const presentationPath = path.join(outputDir, 'index.html');
+        
+        console.log(`📐 Video dimensions: ${options.videoWidth}x${options.videoHeight} @ ${options.videoFps}fps`);
+        
+        try {
+          const videoResult = await generateVideo({
+            presentationPath,
+            outputDir,
+            filename: options.videoFilename,
+            width: options.videoWidth || 1920,
+            height: options.videoHeight || 1080,
+            fps: options.videoFps || 30
+          });
+          
+          console.log(`🎬 Video recording generated: ${videoResult}`);
+        } catch (error) {
+          console.error('❌ Video generation failed:', error.message);
+          console.log('💡 Make sure Chrome or Chromium is installed on your system');
+        }
+        
+        console.log('✅ Video generation complete');
+        console.log();
+      }
+
       console.log('🎉 Presentation ready!');
       console.log(`📂 Open: ${path.join(outputDir, 'index.html')}`);
+      
+      if (options.generateVideo) {
+        console.log('🎬 Video recording info available in output directory');
+      }
 
     } catch (error) {
       console.error('❌ Error:', error.message);

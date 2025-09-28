@@ -7,22 +7,130 @@ Welcome to Marptalk, a revolutionary system for creating automated narrated pres
 Traditional presentation narration faces several challenges. First, manual narration is extremely time-consuming, often taking hours to record a single presentation. Second, recording quality can vary greatly depending on your microphone, environment, and speaking skills. Third, whenever you need to update your slides, you have to re-record entire sections, which is inefficient. Finally, maintaining consistency across multiple presentations or speakers is nearly impossible.
 
 3
-00:00:38,399 --> 00:01:01,599
-Marptalk solves these problems with an elegant three-stage pipeline. First, we extract speaker notes directly from your Marp markdown files using the built-in notes feature. Second, we send these notes to Google Cloud's text-to-speech API to generate high-quality audio narration. Finally, we combine everything into a self-playing HTML presentation that automatically advances slides in sync with the audio.
+00:00:38,399 --> 00:01:07,199
+Marptalk solves these problems with an elegant multi-stage pipeline. First, we extract speaker notes directly from your Marp markdown files using the built-in notes feature. Second, we send these notes to Google Cloud's text-to-speech API to generate high-quality audio narration. Third, we combine everything into a self-playing HTML presentation that automatically advances slides in sync with the audio. Finally, we can generate complete MP4 videos with embedded subtitles and YouTube chapter markers.
 
 4
-00:01:01,599 --> 00:01:23,199
-The key features that make Marptalk special include AI-powered narration using Google Cloud's incredibly natural-sounding voices, automatic slide advancement that keeps perfect sync with the audio, fast regeneration when you update your content, interactive controls so you can pause, resume, or navigate manually, and compatibility with any modern web browser without requiring special software.
+00:01:07,199 --> 00:01:36,799
+The key features that make Marptalk special include AI-powered narration using Google Cloud's incredibly natural-sounding voices, automatic slide advancement that keeps perfect sync with the audio, complete video generation that creates MP4 files with synchronized audio and embedded subtitles, SRT subtitle generation for accessibility and video publishing, YouTube chapter markers for easy navigation, fast regeneration when you update your content, and interactive controls so you can pause, resume, or navigate manually during live presentations.
 
 5
-00:01:23,199 --> 00:01:49,999
-From a technical perspective, Marptalk is built with modern, reliable tools. We use Node.js to create a robust automation pipeline that handles file operations and API calls. The Marp CLI handles the heavy lifting of converting markdown to beautiful HTML slides. Google Cloud's API provides the text-to-speech capabilities with multiple voice options. And we use vanilla JavaScript for the presentation controls to keep things lightweight and compatible.
+00:01:36,799 --> 00:02:13,599
+From a technical perspective, Marptalk is built with modern, reliable tools. We use Node.js to create a robust automation pipeline that handles file operations and API calls. The Marp CLI handles the heavy lifting of converting markdown to beautiful HTML slides. Google Cloud's text-to-speech API provides incredibly natural voices with multiple language options. Puppeteer captures high-quality screenshots of each slide for video generation. FFmpeg handles the complex video processing, combining static slides with perfectly synchronized audio tracks. And we use vanilla JavaScript for the presentation controls to keep things lightweight and compatible.
 
 6
-00:01:49,999 --> 00:02:12,000
-Getting started with Marptalk is simple. First, install the dependencies using npm install. Then authenticate with Google Cloud using gcloud auth application-default login. Run the generate script pointing to your markdown file, and finally open the resulting HTML file in your browser. The entire process typically takes less than a minute for a typical presentation.
+00:02:13,599 --> 00:02:44,399
+Getting started with Marptalk is simple. First, install the dependencies using npm install. Then authenticate with Google Cloud using gcloud auth application-default login. Run the generate script pointing to your markdown file, and finally open the resulting HTML file in your browser. For video generation, add the video and subtitle flags to create a complete MP4 file with embedded subtitles and YouTube chapter markers. The entire process typically takes less than a minute for a typical presentation.
 
 7
-00:02:12,000 --> 00:02:37,599
-That concludes our demonstration of Marptalk! We've shown you how to create automated narrated presentations that combine the power of Marp's markdown-to-slides conversion with Google Cloud's natural text-to-speech capabilities. I encourage you to try it yourself - modify this presentation, add your own speaker notes, experiment with different voices, and start building your own automated presentations. Thank you for your attention, and happy presenting!
+00:02:44,399 --> 00:03:22,399
+That concludes our demonstration of Marptalk! We've shown you how to create automated narrated presentations that combine the power of Marp's markdown-to-slides conversion with Google Cloud's natural text-to-speech capabilities, complete with MP4 video generation, embedded subtitles, and YouTube chapter markers. I encourage you to try it yourself - modify this presentation, add your own speaker notes, experiment with different voices, generate your own videos, and start building automated presentations for any topic. The generated videos are ready for direct upload to YouTube, Vimeo, or any video platform. Thank you for your attention, and happy presenting!
+
+8
+00:03:22,399 --> 00:04:08,799
+The action handler is where the real work begins. Notice it's an async function because we'll be doing lots of file operations and API calls. We start by converting the input and output paths to absolute paths using path.resolve - this prevents issues with relative paths and ensures we're always working with the correct file locations. The fs.pathExists check validates that the input file actually exists before we try to process it. If not, we exit with an error code of 1, which is the standard way to indicate failure in command-line tools. Finally, we create the necessary output directories using fs.ensureDir, which creates the directories if they don't exist and does nothing if they do.
+
+9
+00:04:08,799 --> 00:04:44,000
+This is a great example of developer-friendly design. The development mode feature recognizes that during development, you might want to quickly iterate on the HTML and JavaScript without regenerating all the audio files, which can take several minutes and cost money through the Google Cloud API. The console.log statements use emoji to make the output more readable and engaging. This kind of attention to user experience, even in command-line tools, makes software much more pleasant to use. The clear logging also helps with debugging when things go wrong.
+
+10
+00:04:44,000 --> 00:05:27,600
+Now let's dive into Stage A, the note extraction process. This module demonstrates several important Node.js file handling patterns. We're importing execSync to run shell commands synchronously, which we'll use to call the Marp CLI. The path manipulation here is crucial - we need to figure out where the Marp CLI will write its output file. The path.dirname gets the directory containing our input file, path.basename with the extension parameter gets just the filename without the .md extension, and path.join safely combines these pieces into a complete file path. This approach works across different operating systems because path.join handles the different directory separators used by Windows versus Unix systems.
+
+11
+00:05:27,600 --> 00:06:17,600
+This is where we delegate to the Marp CLI to do the heavy lifting. The execSync function runs a shell command and waits for it to complete. We use npx, which is a tool that comes with npm, to run the Marp CLI without requiring users to install it globally. The --notes flag is the key here - it tells Marp to extract all the HTML comments from the markdown file and write them to a text file. The stdio pipe option captures the command output instead of displaying it to the user, keeping our own console output clean. The try-catch block is important because shell commands can fail for many reasons, and we want to provide helpful error messages rather than cryptic shell errors.
+
+12
+00:06:17,600 --> 00:06:58,400
+After the Marp CLI runs, we need to process the extracted notes file. The fs.readFile call loads the entire file into memory as a UTF-8 string. We check if the content is empty after trimming whitespace - this catches the case where someone forgot to add speaker notes to their presentation. The parseSlideNotes function is elegant in its simplicity - it splits the content on the triple-dash separator that Marp uses between slides, filters out any empty segments, and trims whitespace from each note. This regular expression /\n---\n/ matches the exact pattern that Marp outputs, ensuring we split at the right places.
+
+13
+00:06:58,400 --> 00:07:41,600
+This code demonstrates an important asynchronous programming pattern. Instead of writing each slide file sequentially, which would be slow, we use Promise.all with map to write all files in parallel. The map function creates an array of promises, and Promise.all waits for all of them to complete. Each file is written to a temporary directory with a predictable naming pattern - slide-1.txt, slide-2.txt, and so on. The function returns the total number of slides, which the next stage will need to know how many audio files to generate. This parallel processing approach is much faster than sequential file operations, especially when dealing with presentations that have many slides.
+
+14
+00:07:41,600 --> 00:08:21,600
+Now we move to Stage B, the audio generation phase. This stage uses the Google Cloud Text-to-Speech library to convert our extracted notes into audio files. The client setup shows good configuration practice - it supports both default Google Cloud credentials and a specific key file. Default credentials are easier for development because you just run 'gcloud auth application-default login', but key files are often necessary in production environments. The empty clientConfig object will use default credentials, but if a key file is provided, we add it to the configuration. This flexibility makes the tool work in different deployment scenarios.
+
+15
+00:08:21,600 --> 00:09:00,800
+The request configuration shows the power and flexibility of Google's text-to-speech API. The input section contains the actual text to be spoken. The voice configuration lets you choose from dozens of different voices in multiple languages - Journey-D is a particularly natural-sounding voice. The ssmlGender parameter can be NEUTRAL, MALE, or FEMALE. The audioConfig section specifies technical details - MP3 encoding is perfect for web playback, and we set default values for speaking rate, pitch, and volume gain. These parameters could be exposed as command-line options in future versions to give users more control over the generated audio.
+
+16
+00:09:00,800 --> 00:09:41,600
+The actual API call is surprisingly simple thanks to the Google Cloud library. The synthesizeSpeech method returns an array, so we use destructuring assignment to get the first element. The response contains the actual MP3 data in the audioContent property. Writing this to a file requires the 'binary' encoding parameter - this is crucial because the audio content is binary data, not text. If you forget the binary encoding, the audio files will be corrupted. The consistent file naming pattern matches what we created in Stage A, and the console logging gives users feedback about progress, which is important for longer presentations.
+
+17
+00:09:41,600 --> 00:10:20,800
+The error handling here demonstrates production-ready code practices. Different Google Cloud error codes get different treatments - authentication failures and quota issues should stop the entire process, but invalid text on a single slide should just skip that slide and continue. The specific error codes like 7 for PERMISSION_DENIED are documented in the Google Cloud API documentation. The rate limiting at the end is crucial - we add a 500 millisecond delay between API calls to avoid hitting Google's rate limits. This setTimeout wrapped in a Promise is a common Node.js pattern for adding delays in async functions.
+
+18
+00:10:20,800 --> 00:10:57,200
+Stage C is where everything comes together. We start by generating the basic HTML presentation using the Marp CLI, just like any normal Marp presentation. The __dirname variable gives us the directory where this script is located, which we use to find our slide-automation.js file. After the Marp CLI generates the basic HTML, we'll read it back, modify it by adding our custom styles and JavaScript, and write it back out. This approach lets us leverage all of Marp's powerful slide generation capabilities while adding our own automation features on top.
+
+19
+00:10:57,200 --> 00:11:35,200
+The custom styles create the user interface for our presentation controls. These CSS rules create a floating control panel in the bottom-right corner with a semi-transparent background, and a progress bar at the bottom of the screen. The high z-index ensures these elements appear above the slide content. The rgba background color with alpha transparency lets the slide content show through subtly. The transition property on the progress bar creates a smooth animation as it fills up during the presentation. This CSS demonstrates how to create overlay interfaces that don't interfere with the main content.
+
+20
+00:11:35,200 --> 00:12:09,200
+The HTML structure creates all the interactive elements users need to control the presentation. Each button has a descriptive ID that our JavaScript will use to attach event listeners. The use of emoji in button text makes the interface intuitive and visually appealing. The slide counter shows current position, the progress bar provides visual feedback, and the audio indicator lets users know when audio is playing. This interface strikes a balance between functionality and simplicity - it provides all necessary controls without cluttering the presentation.
+
+21
+00:12:09,200 --> 00:12:49,200
+This code shows a practical technique for modifying existing HTML files. Instead of parsing the HTML with a complex DOM library, we use simple string replacement to inject our content at specific locations. We add styles to the head section, HTML controls just before the closing body tag, and our JavaScript after the HTML but still inside the body. This approach works well because we know the structure of Marp's generated HTML is consistent. The order matters - we inject the HTML first, then the JavaScript, so the JavaScript can find and bind to the HTML elements we just added.
+
+22
+00:12:49,200 --> 00:13:20,400
+The slide-automation script uses an immediately invoked function expression, or IIFE, which is a common JavaScript pattern for creating isolated scope. This prevents our variables from polluting the global namespace and potentially conflicting with other scripts. The 'use strict' directive enables JavaScript's strict mode, which catches common programming errors and prevents unsafe actions. The state variables track the current audio element, playback state, user preferences, and slide information. This modular approach keeps the automation logic organized and maintainable.
+
+23
+00:13:20,400 --> 00:13:53,200
+These functions handle slide navigation by manipulating the browser's location hash. Marp presentations use hash-based navigation, where slide 1 corresponds to #1, slide 2 to #2, and so on. The getCurrentSlideIndex function parses the hash to determine which slide is currently visible. The goToSlide function includes bounds checking to prevent navigation beyond the first or last slide, then updates the hash and refreshes the UI elements. This approach works seamlessly with Marp's existing navigation system while adding our audio synchronization on top.
+
+24
+00:13:53,200 --> 00:14:31,600
+The audio playback function demonstrates modern web audio handling. We create a new Audio object for each slide's MP3 file, using the same naming convention we established in the audio generation stage. The 'ended' event listener is crucial - it automatically advances to the next slide when the current audio finishes, creating the self-playing presentation behavior. The play() method returns a promise that can fail if the browser blocks autoplay, so we catch and log any errors. Modern browsers have strict autoplay policies, but they usually allow playback after user interaction, which our start button provides.
+
+25
+00:14:31,600 --> 00:15:08,000
+The event setup demonstrates good DOM programming practices. We find each button by ID and attach appropriate event listeners, but we check for existence first because the HTML might not be loaded yet when this code runs. The hashchange event fires whenever the URL hash changes, whether through our code or user navigation. The keydown event lets us provide keyboard shortcuts for common actions. This multi-modal input approach makes the presentation accessible and convenient to use - users can click buttons, use keyboard shortcuts, or navigate manually, and everything stays synchronized.
+
+26
+00:15:08,000 --> 00:15:42,399
+The slide change detection uses a simple but effective pattern - comparing the current state to the last known state. This prevents unnecessary work and audio restarts when the function is called multiple times with the same slide number. The force parameter allows certain actions to override this optimization when needed. The audioOnNavigation setting gives users control over whether audio should play when they manually navigate, separate from the automatic presentation mode. This kind of user preference handling makes the tool flexible for different presentation scenarios.
+
+27
+00:15:42,399 --> 00:16:16,399
+The initialization function shows proper DOM loading handling. If the document is still loading when our script runs, we wait for the DOMContentLoaded event before proceeding. This ensures all HTML elements exist before we try to interact with them. Once ready, we detect the total number of slides, set up all event listeners, and initialize the UI to show the correct current state. The logging helps with debugging during development. This initialization pattern is essential for client-side JavaScript that needs to interact with DOM elements.
+
+28
+00:16:16,399 --> 00:16:51,199
+Now let's step back and see how all these pieces work together. The process starts with the command-line interface parsing user arguments and validating inputs. The extraction phase leverages Marp's built-in note extraction to separate content from narration. The audio generation phase transforms text into high-quality speech using Google's advanced TTS models. The HTML enhancement phase combines the visual slides with interactive controls and automation logic. Finally, the client-side JavaScript creates a seamless playback experience that automatically synchronizes slides with audio while providing user controls for interaction.
+
+29
+00:16:51,199 --> 00:17:26,399
+The Marptalk codebase demonstrates several important software design principles. Modularity means each component has a single responsibility and can be understood in isolation. The comprehensive error handling provides actionable feedback when things go wrong, rather than cryptic technical messages. The user experience considerations, like emoji in console output and progress indicators, show attention to the human side of software. The flexibility in configuration options makes the tool useful in different scenarios. And the performance optimizations, like parallel file operations and development mode, show consideration for real-world usage patterns.
+
+30
+00:17:26,399 --> 00:17:55,199
+The code quality in Marptalk is quite high, demonstrating modern JavaScript best practices. The consistent use of async/await makes asynchronous code readable and maintainable. The careful path manipulation ensures the tool works across different operating systems. The configuration approach provides flexibility while maintaining simplicity for basic use cases. Resource management prevents memory leaks and ensures clean shutdown. And the defensive programming techniques make the code robust against unexpected conditions and user errors.
+
+31
+00:17:55,199 --> 00:18:28,799
+This codebase offers excellent learning opportunities for developers at different levels. JavaScript developers can see practical examples of Node.js file operations, modern asynchronous programming patterns, and browser-side DOM manipulation. The CLI development aspects show how to create professional command-line tools. The Google Cloud API integration demonstrates real-world API usage with proper error handling. From a systems perspective, the multi-stage pipeline architecture shows how to break complex problems into manageable pieces, and the configuration management illustrates how to make software flexible for different deployment scenarios.
+
+32
+00:18:28,799 --> 00:18:59,199
+Like any software project, Marptalk has room for enhancement. Short-term improvements could include SSML support for more natural speech patterns, custom CSS themes for different visual styles, and batch processing capabilities. Medium-term enhancements might include a web-based interface for easier use, collaboration features for team presentations, and analytics to understand how audiences engage with presentations. Long-term possibilities could include support for multiple text-to-speech providers, video generation capabilities, and even AI-generated speaker notes from slide content alone.
+
+33
+00:18:59,199 --> 00:19:37,199
+We've taken a comprehensive journey through the Marptalk codebase, exploring everything from command-line interface design to client-side JavaScript automation. This project demonstrates many important concepts in modern JavaScript development, including proper asynchronous programming, effective error handling, and thoughtful user experience design. Most importantly, it shows how to combine existing tools and services into something more powerful and useful. The modular architecture makes the code easy to understand, maintain, and extend. Whether you're building developer tools, integrating with cloud services, or creating automated workflows, the patterns and practices demonstrated in Marptalk provide excellent examples to follow.
+
+34
+00:19:37,199 --> 00:20:14,799
+Thank you for joining me on this detailed exploration of the Marptalk codebase! I hope this walkthrough has given you valuable insights into modern JavaScript development, system integration, and thoughtful software design. I encourage you to clone the repository and experiment with the code yourself. Try modifying the presentation, experimenting with different voices, or adding your own enhancements. The best way to learn is by doing, and this codebase provides an excellent foundation for exploration. If you have questions, feedback, or ideas for improvements, the project welcomes contributions from developers of all skill levels.
 
