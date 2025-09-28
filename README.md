@@ -4,6 +4,8 @@ Automated narrated [Marp](https://marp.app) presentations with [Google Cloud Tex
 
 [**See it in action!**](https://imjasonh.github.io/marptalk/dist/index.html) :eyes:
 
+Marptalk can also generate videos using `ffmpeg`, with sound and subtitles -- [check it out](https://github.com/imjasonh/marptalk/raw/refs/heads/main/dist/presentation.mp4)!
+
 ## Why?
 
 I believe a good slide presentation isn't just the slides on the screen, but what's being said at the same time, so generating both simultaneously and being able to see and iterate on both simultaneously, produces better presentations.
