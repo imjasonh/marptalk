@@ -1,28 +1,71 @@
-const { execSync } = require('child_process');
-const fs = require('fs-extra');
-const path = require('path');
+const { execSync } = require("child_process");
+const fs = require("fs-extra");
+const path = require("path");
+
+async function loadSpeakerNotes() {
+  const speakerNotes = {};
+  const tempDir = ".temp";
+
+  if (!(await fs.pathExists(tempDir))) {
+    console.log(
+      "⚠️  No .temp directory found, TTS fallback will not be available",
+    );
+    return speakerNotes;
+  }
+
+  try {
+    const files = await fs.readdir(tempDir);
+    const noteFiles = files.filter(
+      (f) => f.startsWith("slide-") && f.endsWith(".txt"),
+    );
+
+    for (const file of noteFiles) {
+      const match = file.match(/slide-(\d+)\.txt/);
+      if (match) {
+        const slideIndex = parseInt(match[1]);
+        const content = await fs.readFile(path.join(tempDir, file), "utf-8");
+        speakerNotes[slideIndex] = content.trim();
+      }
+    }
+
+    console.log(
+      `📝 Loaded ${Object.keys(speakerNotes).length} speaker notes for TTS fallback`,
+    );
+  } catch (error) {
+    console.log(
+      "⚠️  Could not load speaker notes, TTS fallback will not be available",
+    );
+  }
+
+  return speakerNotes;
+}
 
 async function generateHtml(inputFile, outputDir) {
-  const automationScriptPath = path.join(__dirname, 'slide-automation.js');
-  const outputHtml = path.join(outputDir, 'index.html');
+  const automationScriptPath = path.join(__dirname, "slide-automation.js");
+  const outputHtml = path.join(outputDir, "index.html");
 
-  if (!await fs.pathExists(automationScriptPath)) {
-    throw new Error('slide-automation.js not found. This should be created first.');
+  if (!(await fs.pathExists(automationScriptPath))) {
+    throw new Error(
+      "slide-automation.js not found. This should be created first.",
+    );
   }
 
   try {
     execSync(`npx @marp-team/marp-cli "${inputFile}" -o "${outputHtml}"`, {
-      stdio: 'pipe'
+      stdio: "pipe",
     });
   } catch (error) {
     throw new Error(`Failed to generate HTML: ${error.message}`);
   }
 
-  if (!await fs.pathExists(outputHtml)) {
-    throw new Error('HTML file was not generated successfully.');
+  if (!(await fs.pathExists(outputHtml))) {
+    throw new Error("HTML file was not generated successfully.");
   }
 
-  let htmlContent = await fs.readFile(outputHtml, 'utf-8');
+  // Load speaker notes from .temp directory for TTS fallback
+  const speakerNotes = await loadSpeakerNotes();
+
+  let htmlContent = await fs.readFile(outputHtml, "utf-8");
 
   const customStyles = `
     <style>
@@ -107,11 +150,17 @@ async function generateHtml(inputFile, outputDir) {
     <div class="audio-indicator" id="audioIndicator">🎤 Playing audio...</div>
   `;
 
-  const automationScript = await fs.readFile(automationScriptPath, 'utf-8');
+  const automationScript = await fs.readFile(automationScriptPath, "utf-8");
 
-  htmlContent = htmlContent.replace('</body>', customHtml + '\n</body>');
-  htmlContent = htmlContent.replace('</head>', customStyles + '\n</head>');
-  htmlContent = htmlContent.replace('</body>', `<script>${automationScript}</script>\n</body>`);
+  htmlContent = htmlContent.replace("</body>", customHtml + "\n</body>");
+  htmlContent = htmlContent.replace("</head>", customStyles + "\n</head>");
+
+
+    ,
+    htmlContent = htmlContent.replace(
+    "</body>",
+    `<script>${automationScript}</script>\n</body>`,
+  );
 
   await fs.writeFile(outputHtml, htmlContent);
 

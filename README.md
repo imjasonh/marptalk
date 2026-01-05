@@ -18,6 +18,33 @@ This can be useful for generating presentations to learn a new topic, with visua
 
 You could also use these tools to generate a presentation in another language, to localize a presentation to an international audience.
 
+## Browser-Based TTS Fallback
+
+Marptalk now supports browser-based speech synthesis as a fallback when MP3 audio files are not available. This uses the [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis) built into modern browsers.
+
+**How it works:**
+- When you generate a presentation, speaker notes are automatically embedded in the HTML
+- If an MP3 audio file is missing or fails to load, the browser will synthesize speech from the speaker notes
+- No Google Cloud account or API keys required for the fallback mode
+- Works offline once the presentation is loaded
+
+**Benefits:**
+- Quick iteration during development without generating audio files
+- No API costs for testing and previewing presentations
+- Instant playback without waiting for TTS generation
+- Works anywhere modern browsers are available
+
+**Usage:**
+```bash
+# Generate HTML without TTS audio (uses browser TTS fallback)
+node src/generate.js my-presentation.md
+
+# Or skip TTS generation explicitly
+node src/generate.js my-presentation.md --no-generate-tts
+```
+
+**Note:** Browser TTS quality varies by browser and operating system. For production presentations, we recommend using `--generate-tts` to create high-quality MP3 files with Google Cloud TTS.
+
 ## Quick Start
 
 1. **Install dependencies**:
